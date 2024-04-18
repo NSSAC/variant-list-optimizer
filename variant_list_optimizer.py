@@ -26,7 +26,7 @@ __all__ = [
     "prune_tree",
     "make_nearest_included_ancestor",
     "optimize_greedy",
-    "optimize_topk_greedy",
+    "optimize_beam_search",
 ]
 
 
@@ -204,7 +204,7 @@ def eval_candidate_sets(
     return candidate_badness
 
 
-def optimize_topk_greedy(
+def optimize_beam_search(
     size: int, k: int, tree: nx.DiGraph, distance_badness: float, par: int = 1
 ) -> frozenset[str]:
     assert size >= 2

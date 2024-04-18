@@ -1,0 +1,8 @@
+ray[default]
+numpy
+scipy
+pandas
+networkx
+more_itertools
+pandera
+git+https://github.com/parantapa/parsl.git

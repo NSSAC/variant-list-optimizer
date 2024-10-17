@@ -1,0 +1,6 @@
+{
+    project: "variant-list-optimizer",
+    remotes: {
+        rivanna: "rivanna:variant-list-optimizer"
+    }
+}

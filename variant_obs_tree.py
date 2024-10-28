@@ -9,9 +9,9 @@ import pandas as pd
 import pandera as pa
 import pandera.typing as pat
 
-from pango_aliasor.aliasor import Aliasor
-
 import click
+
+from pango_aliasor.aliasor import Aliasor
 
 
 class InputSchema(pa.DataFrameModel):
@@ -33,7 +33,7 @@ def cli():
     "input_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
     required=True,
-    help="Path to lineage count file (CSV).",
+    help="Path to observation count file (CSV).",
 )
 @click.option(
     "-o",
@@ -71,7 +71,7 @@ def validate_input(input_file: Path, output_file: Path):
     "output_file",
     type=click.Path(exists=False, file_okay=True, dir_okay=False, path_type=Path),
     required=True,
-    help="Path to unweighted variant graph data file (JSON node-link).",
+    help="Path to unweighted variant graph file (JSON node-link).",
 )
 @click.option(
     "-f",
@@ -101,11 +101,11 @@ def make_variant_tree(
     """Create variant tree from validated input data.
 
     The input data is first filtered
-    with the fips list and the start and end dates.
+    with the FIPS list and the start and end dates.
     If any of those is not provided,
     then the corresponding filtering is not done.
 
-    The varinats in the filtered data
+    The variants in the filtered data
     and their ancestors in the Pango lineage tree
     are used to create the variant tree.
     """
@@ -147,7 +147,7 @@ def make_variant_tree(
     print("# nodes in variant tree:", G.number_of_nodes())
     print("# edges in variant tree:", G.number_of_edges())
 
-    graph_json = nx.node_link_data(G, edges="edges")
+    graph_json = nx.node_link_data(G, edges="edges")  # type: ignore
     graph_json = json.dumps(graph_json)
     output_file.write_text(graph_json)
 
@@ -159,7 +159,7 @@ def make_variant_tree(
     "input_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
     required=True,
-    help="Path to validated input file (Parquet).",
+    help="Path to validated data file (Parquet).",
 )
 @click.option(
     "-g",
@@ -167,7 +167,7 @@ def make_variant_tree(
     "graph_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
     required=True,
-    help="Path to unweighted graph data file (JSON node-link).",
+    help="Path to unweighted graph file (JSON node-link).",
 )
 @click.option(
     "-o",

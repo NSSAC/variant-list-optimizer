@@ -238,13 +238,6 @@ def do_optimize_beam_search(
     help="Size of the variant list.",
 )
 @click.option(
-    "-bw",
-    "--beam-width",
-    type=int,
-    required=True,
-    help="Beam search width.",
-)
-@click.option(
     "-p",
     "--distance-penalty",
     type=float,
@@ -252,12 +245,19 @@ def do_optimize_beam_search(
     show_default=True,
     help="Penalty for re-assigning observation to a variant 1.0 distance away.",
 )
+@click.option(
+    "-bw",
+    "--beam-width",
+    type=int,
+    required=True,
+    help="Beam search width.",
+)
 def optimize_beam_search(
     input_file: Path,
     output_file: Path,
-    beam_width: int,
     size: int,
     distance_penalty: float,
+    beam_width: int,
 ):
     """Use beam search to create the variant list."""
     G = json.loads(input_file.read_text())

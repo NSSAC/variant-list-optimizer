@@ -4,12 +4,16 @@ import math
 import json
 import heapq
 from dataclasses import dataclass
+from collections import defaultdict
 from pathlib import Path
 
 import ray
 import networkx as nx
 from more_itertools import first
 import click
+
+import gurobipy as gp
+from gurobipy import GRB
 
 from .ray_utils import ray_map
 
@@ -265,7 +269,7 @@ def optimize_beam_search(
 
     ray.init(include_dashboard=False)
     try:
-        selected = do_optimize_beam_search(beam_width, size, G, distance_penalty)
+        selected = do_optimize_beam_search(size, beam_width, G, distance_penalty)
 
         v_nia = make_nia(selected, G, distance_penalty)
 
@@ -288,3 +292,126 @@ def optimize_beam_search(
         output_file.write_text(json.dumps(output))
     finally:
         ray.shutdown()
+
+
+def compute_assignment_penalty(
+    G: nx.DiGraph, distance_penalty: float
+) -> dict[str, dict[str, float]]:
+    assignment_penalty = defaultdict(dict)
+
+    iterable = nx.all_pairs_bellman_ford_path_length(G, weight="weight")
+    for a, v_distance in iterable:
+        for v, distance in v_distance.items():
+            penalty = distance_penalty * math.exp(distance) * G.nodes[v]["importance"]
+            assignment_penalty[v][a] = penalty
+
+    assignment_penalty.default_factory = None
+
+    return assignment_penalty
+
+
+def do_optimize_gurobi(size: int, G: nx.DiGraph, distance_penalty: float) -> set[str]:
+    assignment_penalty = compute_assignment_penalty(G, distance_penalty)
+
+    m = gp.Model("vlrs-ilp")
+
+    xs = list(G)
+    xs = m.addVars(xs, vtype=GRB.BINARY)
+
+    ys = [f"{v}:{a}" for v in G for a in assignment_penalty[v]]
+    ys = m.addVars(ys, vtype=GRB.BINARY)
+
+    m.addConstr(xs.sum() == size)
+
+    root_node = first([v for v in G if len(G.pred[v]) == 0])
+    m.addConstr(xs[root_node] == 1)
+
+    for v in G:
+        vars = []
+        for a in assignment_penalty[v]:
+            vars.append(ys[f"{v}:{a}"])
+        m.addConstr(gp.quicksum(vars) == 1)
+
+    for v in G:
+        for a in assignment_penalty[v]:
+            m.addConstr(ys[f"{v}:{a}"] <= xs[a])
+
+    consts, vars = [], []
+    for v in G:
+        for a in assignment_penalty[v]:
+            consts.append(assignment_penalty[v][a])
+            vars.append(ys[f"{v}:{a}"])
+
+    m.setObjective(gp.LinExpr(consts, vars), GRB.MINIMIZE)
+
+    m.optimize()
+
+    print(f"Objective value: {m.ObjVal}")
+
+    selected = set()
+    for k, v in xs.items():
+        if v.X:
+            selected.add(k)
+
+    return selected
+
+
+@optimize.command()
+@click.option(
+    "-i",
+    "--input",
+    "input_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to weighted graph file (JSON).",
+)
+@click.option(
+    "-o",
+    "--output",
+    "output_file",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Output file (JSON).",
+)
+@click.option(
+    "-s",
+    "--size",
+    type=int,
+    required=True,
+    help="Size of the variant list.",
+)
+@click.option(
+    "-p",
+    "--distance-penalty",
+    type=float,
+    default=10.0,
+    show_default=True,
+    help="Penalty for re-assigning observation to a variant 1.0 distance away.",
+)
+def optimize_gurobi(
+    input_file: Path, output_file: Path, size: int, distance_penalty: float
+):
+    """Use Gurobi optimizer to create the variant list."""
+    G = json.loads(input_file.read_text())
+    G = nx.node_link_graph(G, edges="edges")  # type: ignore
+
+    selected = do_optimize_gurobi(size, G, distance_penalty)
+
+    v_nia = make_nia(selected, G, distance_penalty)
+
+    assignment = []
+    for k, v in v_nia.items():
+        assignment.append(
+            dict(
+                orig_label=k,
+                new_label=v.nia,
+                distance=v.distance,
+                penalty=v.penalty,
+            )
+        )
+
+    penalty = compute_penalty(v_nia)
+    print(f"penalty: {penalty}")
+
+    output = dict(variant_list=list(selected), assignment=assignment, penalty=penalty)
+    output_file.write_text(json.dumps(output))

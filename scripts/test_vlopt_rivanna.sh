@@ -1,9 +1,11 @@
 #!/bin/bash
-# Test vlopt tool
+# Test vlopt tool on Rivanna
 
 set -Eeuo pipefail
 
 trap 'echo "############ $BASH_COMMAND"' DEBUG
+
+export GRB_LICENSE_FILE="/apps/software/vendor/gurobi/11.0.0/gurobi.lic"
 
 # Input files
 DATA_FILE="/project/nssac_covid19/COVID-19_commons/products/external_data_collection/variants/outbreak_info_variants_states_long.csv"
@@ -21,6 +23,7 @@ VARIANT_GRAPH_FILE="/scratch/$USER/variant-graph.json"
 
 OPT_VARIANT_LIST_GREEDY="/scratch/$USER/opt-variant-list-greedy.json"
 OPT_VARIANT_LIST_BEAM_SEARCH="/scratch/$USER/opt-variant-list-beam-search.json"
+OPT_VARIANT_LIST_GUROBI="/scratch/$USER/opt-variant-list-gurobi.json"
 
 # Create the graph
 ##################
@@ -61,4 +64,10 @@ vlopt optimize optimize-beam-search \
     --size "$LIST_SIZE" \
     --distance-penalty "$DISTANCE_PENALTY" \
     --beam-width "$LIST_SIZE"
+
+vlopt optimize optimize-gurobi \
+    --input "$VARIANT_GRAPH_FILE" \
+    --output "$OPT_VARIANT_LIST_GUROBI" \
+    --size "$LIST_SIZE" \
+    --distance-penalty "$DISTANCE_PENALTY"
 

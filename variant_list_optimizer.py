@@ -1,240 +1,280 @@
 """Variant List Optimizer."""
 
 import math
+import json
 import heapq
-from typing import cast
 from dataclasses import dataclass
+from pathlib import Path
 
 import ray
-import numpy as np
-import pandas as pd
 import networkx as nx
-from more_itertools import divide
+from more_itertools import first
+import click
 
-import pandera as pa
-import pandera.typing as pat
-import pandera.dtypes as pad
-
-from pango_aliasor.aliasor import Aliasor
+from ray_utils import ray_map
 
 TIME_UNIT = 30 * 24 * 3600  # 1 Month
-
-__all__ = [
-    "get_time_importance",
-    "get_distance_badness",
-    "make_variant_tree",
-    "prune_tree",
-    "make_nearest_included_ancestor",
-    "optimize_greedy",
-    "optimize_beam_search",
-]
+CHUNKSIZE = 50
 
 
-# importance = time_importance * exp(-time)
-def get_time_importance(ref_time: float = 1.0, ref_importance: float = 0.1) -> float:
-    return ref_importance / math.exp(-ref_time)
-
-
-# badness = distance_badness * exp(distance)
-def get_distance_badness(ref_distance: float = 1.0, ref_badness: float = 10.0) -> float:
-    return ref_badness / math.exp(ref_distance)
-
-
-class VariantDF(pa.DataFrameModel):
-    date: pat.Series[pad.Timestamp] = pa.Field(nullable=False, coerce=True)
-    variant: pat.Series[str] = pa.Field(nullable=False, coerce=True)
-    weight: pat.Series[float] = pa.Field(nullable=False, coerce=True)
-
-
-def make_variant_tree(
-    data: pd.DataFrame, ref_time: pd.Timestamp, time_importance: float
-) -> nx.DiGraph:
-    data = cast(pd.DataFrame, VariantDF.validate(data))
-    data = cast(pd.DataFrame, data[["date", "variant", "weight"]].copy())
-    data["time"] = np.abs((ref_time - data.date).dt.total_seconds()) / TIME_UNIT
-
-    seen_variants = data.variant.unique().tolist()
-
-    namer = Aliasor()
-    namer.enable_expansion()
-
-    tree = nx.DiGraph()
-
-    for child in seen_variants:
-        while child != "SARS-CoV-2":
-            parent = namer.parent(child)
-            if parent == "":
-                parent = "SARS-CoV-2"
-            tree.add_edge(parent, child)
-
-            child = parent
-            parent = namer.parent(child)
-
-    for variant in tree:
-        if variant in seen_variants:
-            df = data[data.variant == variant]
-
-            time = df.time.to_numpy()
-            weight = df.weight.to_numpy()
-            importance = time_importance * np.exp(-time) * weight
-
-            tree.nodes[variant]["weight"] = np.sum(weight)
-            tree.nodes[variant]["importance"] = np.sum(importance)
-        else:
-            tree.nodes[variant]["weight"] = 0.0
-            tree.nodes[variant]["importance"] = 0.0
-
-    for u, v in tree.edges:
-        tree.edges[u, v]["distance"] = 1.0
-
-    assert nx.is_tree(tree)
-
-    return tree
-
-
-def prune_tree(tree: nx.DiGraph, threshold: float = 1.0) -> nx.DiGraph:
-    tree = nx.DiGraph(tree)
-
-    vertices = list(nx.topological_sort(tree))
-    vertices = list(reversed(vertices))
-
-    for u in vertices:
-        if tree.nodes[u]["weight"] < threshold:
-            # Remove leaf nodes with "zero" weight
-            if len(tree.succ[u]) == 0:
-                tree.remove_node(u)
-
-            # Remove nodes with "zero" weight and single child
-            # Connect child to parent
-            elif len(tree.succ[u]) == 1 and len(tree.pred[u]) == 1:
-                p = list(tree.pred[u])[0]
-                c = list(tree.succ[u])[0]
-
-                distance = tree.edges[p, u]["distance"] + tree.edges[u, c]["distance"]
-
-                tree.remove_node(u)
-                tree.add_edge(p, c)
-                tree.edges[p, c]["distance"] = distance
-
-    assert nx.is_tree(tree)
-
-    return tree
+@click.group()
+def cli():
+    """Compute optimal variant list."""
 
 
 @dataclass
 class NIA:
+    """Nearest included ancestor."""
+
     nia: str
     distance: float
-    badness: float
+    penalty: float
 
 
-def make_nearest_included_ancestor(
-    selected: set[str] | frozenset[str], tree: nx.DiGraph, distance_badness: float
+def make_nia(
+    selected: set[str] | frozenset[str], G: nx.DiGraph, distance_penalty: float
 ) -> dict[str, NIA]:
+    """Map each node in the graph to its nearest included ancestor."""
     v_nia: dict[str, NIA] = {}
 
-    for v in nx.topological_sort(tree):
+    for v in nx.topological_sort(G):
         if v in selected:
             v_nia[v] = NIA(v, 0.0, 0.0)
         else:
-            u = list(tree.pred[v])[0]
-            distance = v_nia[u].distance + tree.edges[u, v]["distance"]
-            badness = (
-                distance_badness * math.exp(distance) * tree.nodes[v]["importance"]
-            )
-            v_nia[v] = NIA(u, distance, badness)
+            u = first(G.pred[v])
+            distance = v_nia[u].distance + G.edges[u, v]["distance"]
+            penalty = distance_penalty * math.exp(distance) * G.nodes[v]["importance"]
+            v_nia[v] = NIA(u, distance, penalty)
 
     return v_nia
 
 
-@ray.remote
-def eval_new_vertex(
+def compute_penalty(v_nia: dict[str, NIA]) -> float:
+    """Compute total assignment penalty."""
+    return sum(nia.penalty for nia in v_nia.values())
+
+
+def do_evaluate_candidate(
+    candidate: str,
     selected: set[str],
-    candidates: list[str],
-    tree: nx.DiGraph,
-    distance_badness: float,
-) -> dict[str, float]:
-    v_badness = {}
-    for v in candidates:
-        selected_set = selected.union(v)
-        v_nia = make_nearest_included_ancestor(selected_set, tree, distance_badness)
-        badness = sum(nia.badness for nia in v_nia.values())
-        v_badness[v] = badness
-    return v_badness
+    G: nx.DiGraph,
+    distance_penalty: float,
+) -> tuple[str, float]:
+    selected_set = selected | {candidate}
+    v_nia = make_nia(selected_set, G, distance_penalty)
+    penalty = sum(nia.penalty for nia in v_nia.values())
+    return (candidate, penalty)
 
 
-def optimize_greedy(
-    size: int, tree: nx.DiGraph, distance_badness: float, par: int = 1
-) -> set[str]:
-    # start with root node
-    selected = set([v for v in tree if len(tree.pred[v]) == 0])
+def do_optimize_greedy(size: int, G: nx.DiGraph, distance_penalty: float) -> set[str]:
+    assert size <= G.number_of_nodes()
 
-    candidates = set(tree)
-    for v in selected:
-        candidates.remove(v)
+    root_node = first([v for v in G if len(G.pred[v]) == 0])
+    selected = {root_node}
+    candidates = set(G) - selected
 
-    while len(selected) < size and len(candidates) > 0:
-        groups = divide(par, candidates)
-        tasks = [
-            eval_new_vertex.remote(selected, list(g), tree, distance_badness)
-            for g in groups
-        ]
-        results = ray.get(tasks)
-        v_badness = {k: v for d in results for k, v in d.items()}
-        v = min(v_badness, key=v_badness.get)  # type: ignore
-        print("Selected", v)
+    cur_size = len(selected)
+    penalty = compute_penalty(make_nia(selected, G, distance_penalty))
+    print(f"size = {cur_size}, penalty = {penalty}")
+
+    while cur_size < size:
+        args_list = [(c,) for c in candidates]
+        extra_args = (selected, G, distance_penalty)
+
+        v_penalty = ray_map(
+            do_evaluate_candidate, args_list, extra_args, chunksize=CHUNKSIZE
+        )
+        v_penalty = dict(v_penalty)
+        v = min(v_penalty, key=v_penalty.get)  # type: ignore
 
         selected.add(v)
         candidates.remove(v)
 
+        cur_size = len(selected)
+        penalty = min(v_penalty.values())
+        print(f"size = {cur_size}, penalty = {penalty}")
+
     return selected
 
 
-@ray.remote
-def eval_candidate_sets(
-    candidates: list[frozenset[str]],
-    tree: nx.DiGraph,
-    distance_badness: float,
-) -> dict[str, float]:
-    candidate_badness = {}
-    for candidate in candidates:
-        v_nia = make_nearest_included_ancestor(candidate, tree, distance_badness)
-        badness = sum(nia.badness for nia in v_nia.values())
-        candidate_badness[candidate] = badness
-    return candidate_badness
+@cli.command()
+@click.option(
+    "-i",
+    "--input",
+    "input_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to weighted graph file (JSON).",
+)
+@click.option(
+    "-o",
+    "--output",
+    "output_file",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Output file (JSON).",
+)
+@click.option(
+    "-s",
+    "--size",
+    type=int,
+    required=True,
+    help="Size of the variant list.",
+)
+@click.option(
+    "-p",
+    "--distance-penalty",
+    type=float,
+    default=10.0,
+    show_default=True,
+    help="Penalty for re-assigning observation to a variant 1.0 distance away.",
+)
+def optimize_greedy(
+    input_file: Path, output_file: Path, size: int, distance_penalty: float
+):
+    """Use greedy optimization to create variant list."""
+    G = json.loads(input_file.read_text())
+    G = nx.node_link_graph(G, edges="edges")  # type: ignore
+
+    ray.init(include_dashboard=False)
+
+    selected = do_optimize_greedy(size, G, distance_penalty)
+
+    v_nia = make_nia(selected, G, distance_penalty)
+
+    assignment = []
+    for k, v in v_nia.items():
+        assignment.append(
+            dict(orig_label=k, new_label=v.nia, distance=v.distance, penalty=v.penalty)
+        )
+
+    penalty = compute_penalty(v_nia)
+
+    output = dict(variant_list=list(selected), assignment=assignment, penalty=penalty)
+    output_file.write_text(json.dumps(output))
+
+    ray.shutdown()
 
 
-def optimize_beam_search(
-    size: int, k: int, tree: nx.DiGraph, distance_badness: float, par: int = 1
+def do_evaluate_candidate_selected(
+    candidate: str,
+    selected: frozenset[str],
+    G: nx.DiGraph,
+    distance_penalty: float,
+) -> tuple[frozenset[str], float]:
+    selected_set = selected | {candidate}
+    v_nia = make_nia(selected_set, G, distance_penalty)
+    penalty = sum(nia.penalty for nia in v_nia.values())
+    return (selected_set, penalty)
+
+
+def do_optimize_beam_search(
+    size: int, beam_width: int, G: nx.DiGraph, distance_penalty: float
 ) -> frozenset[str]:
-    assert size >= 2
+    assert size <= G.number_of_nodes()
 
-    root_node = [v for v in tree if len(tree.pred[v]) == 0][0]
-    all_nodes = frozenset(tree)
+    root_node = first([v for v in G if len(G.pred[v]) == 0])
+    selected_sets = [frozenset([root_node])]
+    all_nodes = set(G)
 
-    cur_size = 2
-    cur_candidates = set()
-    for v in all_nodes:
-        if v != root_node:
-            cur_candidates.add(frozenset([root_node, v]))
+    cur_size = len(selected_sets[0])
+    penalty = compute_penalty(make_nia(selected_sets[0], G, distance_penalty))
+    print(f"size = {cur_size}, penalty = {penalty}")
 
-    while True:
-        print(f"{cur_size=}")
+    while cur_size < size:
+        args_list = []
+        for selected in selected_sets:
+            for candidate in all_nodes - selected:
+                args_list.append((candidate, selected))
 
-        groups = divide(par, cur_candidates)
-        tasks = [
-            eval_candidate_sets.remote(list(g), tree, distance_badness) for g in groups
-        ]
-        results = ray.get(tasks)
-        candidate_badness = {k: v for d in results for k, v in d.items()}
-        retained_candidates = heapq.nsmallest(k, candidate_badness, key=candidate_badness.get)  # type: ignore
+        extra_args = (G, distance_penalty)
 
-        if cur_size >= size:
-            return retained_candidates[0]
+        candidate_penalty = ray_map(
+            do_evaluate_candidate_selected, args_list, extra_args, chunksize=CHUNKSIZE
+        )
+        candidate_penalty = dict(candidate_penalty)
+        selected_sets = heapq.nsmallest(beam_width, candidate_penalty, key=candidate_penalty.get)  # type: ignore
 
-        cur_size += 1
-        cur_candidates = set()
-        for parent in retained_candidates:
-            for v in all_nodes - parent:
-                candidate = parent.union([v])
-                cur_candidates.add(candidate)
+        cur_size = len(selected_sets[0])
+        penalty = min(candidate_penalty.values())
+        print(f"size = {cur_size}, penalty = {penalty}")
+
+    selected_set_penalty = {
+        k: compute_penalty(make_nia(k, G, distance_penalty)) for k in selected_sets
+    }
+    selected_set = min(selected_set_penalty, key=selected_set_penalty.get)  # type: ignore
+    return selected_set
+
+
+@cli.command()
+@click.option(
+    "-i",
+    "--input",
+    "input_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to weighted graph file (JSON).",
+)
+@click.option(
+    "-o",
+    "--output",
+    "output_file",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Output file (JSON).",
+)
+@click.option(
+    "-s",
+    "--size",
+    type=int,
+    required=True,
+    help="Size of the variant list.",
+)
+@click.option(
+    "-bw",
+    "--beam-width",
+    type=int,
+    required=True,
+    help="Beam search width.",
+)
+@click.option(
+    "-p",
+    "--distance-penalty",
+    type=float,
+    default=10.0,
+    show_default=True,
+    help="Penalty for re-assigning observation to a variant 1.0 distance away.",
+)
+def optimize_beam_search(
+    input_file: Path,
+    output_file: Path,
+    beam_width: int,
+    size: int,
+    distance_penalty: float,
+):
+    """Use beam search to create variant list."""
+    G = json.loads(input_file.read_text())
+    G = nx.node_link_graph(G, edges="edges")  # type: ignore
+
+    ray.init(include_dashboard=False)
+
+    selected = do_optimize_beam_search(beam_width, size, G, distance_penalty)
+
+    v_nia = make_nia(selected, G, distance_penalty)
+
+    assignment = []
+    for k, v in v_nia.items():
+        assignment.append(
+            dict(orig_label=k, new_label=v.nia, distance=v.distance, penalty=v.penalty)
+        )
+
+    penalty = compute_penalty(v_nia)
+
+    output = dict(variant_list=list(selected), assignment=assignment, penalty=penalty)
+    output_file.write_text(json.dumps(output))
+
+    ray.shutdown()
+
+
+if __name__ == "__main__":
+    cli()

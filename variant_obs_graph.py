@@ -1,4 +1,4 @@
-"""Create a weighted variant tree from observation count data."""
+"""Create a directed acyclic weighted variant graph from observation data."""
 
 import json
 from pathlib import Path
@@ -23,7 +23,7 @@ class InputSchema(pa.DataFrameModel):
 
 @click.group()
 def cli():
-    """Create a weighted variant tree from observation count data."""
+    """Create a directed acyclic weighted variant graph from observation data."""
 
 
 @cli.command()
@@ -33,7 +33,7 @@ def cli():
     "input_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
     required=True,
-    help="Path to observation count file (CSV).",
+    help="Path to observation data file (CSV).",
 )
 @click.option(
     "-o",
@@ -71,7 +71,7 @@ def validate_input(input_file: Path, output_file: Path):
     "output_file",
     type=click.Path(exists=False, file_okay=True, dir_okay=False, path_type=Path),
     required=True,
-    help="Path to unweighted variant graph file (JSON node-link).",
+    help="Path to unweighted variant graph file (JSON).",
 )
 @click.option(
     "-f",
@@ -91,14 +91,14 @@ def validate_input(input_file: Path, output_file: Path):
     type=str,
     help="Data end date (exclusive).",
 )
-def make_variant_tree(
+def make_variant_graph(
     input_file: Path,
     output_file: Path,
     fips_list: str | None,
     start_date: str | None,
     end_date: str | None,
 ):
-    """Create variant tree from validated input data.
+    """Create variant graph from validated input data.
 
     The input data is first filtered
     with the FIPS list and the start and end dates.
@@ -107,7 +107,7 @@ def make_variant_tree(
 
     The variants in the filtered data
     and their ancestors in the Pango lineage tree
-    are used to create the variant tree.
+    are used to create the variant graph.
     """
     data = pd.read_parquet(input_file)
     print("# rows in input data:", len(data))
@@ -144,8 +144,8 @@ def make_variant_tree(
 
             child = parent
 
-    print("# nodes in variant tree:", G.number_of_nodes())
-    print("# edges in variant tree:", G.number_of_edges())
+    print("# nodes in variant graph:", G.number_of_nodes())
+    print("# edges in variant graph:", G.number_of_edges())
 
     graph_json = nx.node_link_data(G, edges="edges")  # type: ignore
     graph_json = json.dumps(graph_json)
@@ -167,7 +167,7 @@ def make_variant_tree(
     "graph_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
     required=True,
-    help="Path to unweighted graph file (JSON node-link).",
+    help="Path to unweighted graph file (JSON).",
 )
 @click.option(
     "-o",
@@ -175,7 +175,7 @@ def make_variant_tree(
     "output_file",
     type=click.Path(exists=False, file_okay=True, dir_okay=False, path_type=Path),
     required=True,
-    help="Path to weighted graph data file (JSON node-link).",
+    help="Path to weighted graph file (JSON).",
 )
 @click.option(
     "-rd",
@@ -192,14 +192,14 @@ def make_variant_tree(
     show_default=True,
     help="Importance of an observation one month from the reference date.",
 )
-def make_weighted_variant_tree(
+def make_weighted_variant_graph(
     input_file: Path,
     graph_file: Path,
     output_file: Path,
     reference_date: str,
     temporal_importance_decay: float,
 ):
-    """Add node importance and edge distance to the variant tree.
+    """Add node importance and edge distance to the variant graph.
 
     Nodes / variants are assigned "importance"
     based on the number and time of observation.

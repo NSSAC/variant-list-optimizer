@@ -1,4 +1,4 @@
-"""Create a directed acyclic weighted variant graph from observation data."""
+"""Create variant graph from observation data."""
 
 import json
 from pathlib import Path
@@ -22,11 +22,11 @@ class InputSchema(pa.DataFrameModel):
 
 
 @click.group()
-def cli():
-    """Create a directed acyclic weighted variant graph from observation data."""
+def make_graph():
+    """Create variant graph from observation data."""
 
 
-@cli.command()
+@make_graph.command()
 @click.option(
     "-i",
     "--input",
@@ -56,7 +56,7 @@ def validate_input(input_file: Path, output_file: Path):
     data.to_parquet(output_file, index=False, compression="zstd")
 
 
-@cli.command()
+@make_graph.command()
 @click.option(
     "-i",
     "--input",
@@ -152,7 +152,7 @@ def make_variant_graph(
     output_file.write_text(graph_json)
 
 
-@cli.command()
+@make_graph.command()
 @click.option(
     "-i",
     "--input",
@@ -211,7 +211,7 @@ def make_weighted_variant_graph(
 
     data = pd.read_parquet(input_file)
     G = json.loads(graph_file.read_text())
-    G = nx.node_link_graph(G, edges="edges")
+    G = nx.node_link_graph(G, edges="edges")  # type: ignore
 
     if "fips_list" in G.graph:
         split_fips_list = G.graph["fips_list"].strip().split(",")
@@ -251,10 +251,6 @@ def make_weighted_variant_graph(
     for u, v in G.edges:
         G.edges[u, v]["distance"] = 1.0
 
-    graph_json = nx.node_link_data(G, edges="edges")
+    graph_json = nx.node_link_data(G, edges="edges")  # type: ignore
     graph_json = json.dumps(graph_json)
     output_file.write_text(graph_json)
-
-
-if __name__ == "__main__":
-    cli()

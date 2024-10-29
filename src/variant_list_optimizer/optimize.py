@@ -1,4 +1,4 @@
-"""Variant List Optimizer."""
+"""Compute the optimal variant list."""
 
 import math
 import json
@@ -11,15 +11,15 @@ import networkx as nx
 from more_itertools import first
 import click
 
-from ray_utils import ray_map
+from .ray_utils import ray_map
 
 TIME_UNIT = 30 * 24 * 3600  # 1 Month
 CHUNKSIZE = 50
 
 
 @click.group()
-def cli():
-    """Compute optimal variant list."""
+def optimize():
+    """Compute the optimal variant list."""
 
 
 @dataclass
@@ -97,7 +97,7 @@ def do_optimize_greedy(size: int, G: nx.DiGraph, distance_penalty: float) -> set
     return selected
 
 
-@cli.command()
+@optimize.command()
 @click.option(
     "-i",
     "--input",
@@ -132,28 +132,35 @@ def do_optimize_greedy(size: int, G: nx.DiGraph, distance_penalty: float) -> set
 def optimize_greedy(
     input_file: Path, output_file: Path, size: int, distance_penalty: float
 ):
-    """Use greedy optimization to create variant list."""
+    """Use greedy optimization to create the variant list."""
     G = json.loads(input_file.read_text())
     G = nx.node_link_graph(G, edges="edges")  # type: ignore
 
     ray.init(include_dashboard=False)
+    try:
+        selected = do_optimize_greedy(size, G, distance_penalty)
 
-    selected = do_optimize_greedy(size, G, distance_penalty)
+        v_nia = make_nia(selected, G, distance_penalty)
 
-    v_nia = make_nia(selected, G, distance_penalty)
+        assignment = []
+        for k, v in v_nia.items():
+            assignment.append(
+                dict(
+                    orig_label=k,
+                    new_label=v.nia,
+                    distance=v.distance,
+                    penalty=v.penalty,
+                )
+            )
 
-    assignment = []
-    for k, v in v_nia.items():
-        assignment.append(
-            dict(orig_label=k, new_label=v.nia, distance=v.distance, penalty=v.penalty)
+        penalty = compute_penalty(v_nia)
+
+        output = dict(
+            variant_list=list(selected), assignment=assignment, penalty=penalty
         )
-
-    penalty = compute_penalty(v_nia)
-
-    output = dict(variant_list=list(selected), assignment=assignment, penalty=penalty)
-    output_file.write_text(json.dumps(output))
-
-    ray.shutdown()
+        output_file.write_text(json.dumps(output))
+    finally:
+        ray.shutdown()
 
 
 def do_evaluate_candidate_selected(
@@ -206,7 +213,7 @@ def do_optimize_beam_search(
     return selected_set
 
 
-@cli.command()
+@optimize.command()
 @click.option(
     "-i",
     "--input",
@@ -252,29 +259,32 @@ def optimize_beam_search(
     size: int,
     distance_penalty: float,
 ):
-    """Use beam search to create variant list."""
+    """Use beam search to create the variant list."""
     G = json.loads(input_file.read_text())
     G = nx.node_link_graph(G, edges="edges")  # type: ignore
 
     ray.init(include_dashboard=False)
+    try:
+        selected = do_optimize_beam_search(beam_width, size, G, distance_penalty)
 
-    selected = do_optimize_beam_search(beam_width, size, G, distance_penalty)
+        v_nia = make_nia(selected, G, distance_penalty)
 
-    v_nia = make_nia(selected, G, distance_penalty)
+        assignment = []
+        for k, v in v_nia.items():
+            assignment.append(
+                dict(
+                    orig_label=k,
+                    new_label=v.nia,
+                    distance=v.distance,
+                    penalty=v.penalty,
+                )
+            )
 
-    assignment = []
-    for k, v in v_nia.items():
-        assignment.append(
-            dict(orig_label=k, new_label=v.nia, distance=v.distance, penalty=v.penalty)
+        penalty = compute_penalty(v_nia)
+
+        output = dict(
+            variant_list=list(selected), assignment=assignment, penalty=penalty
         )
-
-    penalty = compute_penalty(v_nia)
-
-    output = dict(variant_list=list(selected), assignment=assignment, penalty=penalty)
-    output_file.write_text(json.dumps(output))
-
-    ray.shutdown()
-
-
-if __name__ == "__main__":
-    cli()
+        output_file.write_text(json.dumps(output))
+    finally:
+        ray.shutdown()

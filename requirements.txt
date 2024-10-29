@@ -1,8 +1,0 @@
-ray[default]
-numpy
-scipy
-pandas
-networkx
-more_itertools
-pandera
-git+https://github.com/aswarren/pango_aliasor.git

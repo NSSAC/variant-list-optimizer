@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "variant-list-optimizer"
+version = "0.0.1"
+authors = [
+  { name="Parantapa Bhattacharya", email="pb+pypi@parantapa.net" },
+]
+description = "Compute optimal variant list."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "more-itertools",
+    "click",
+    "ray[default]",
+    "numpy",
+    "pandas",
+    "pandera",
+    "pyarrow",
+    "networkx",
+    "pango_aliasor @ git+https://github.com/aswarren/pango_aliasor.git",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/NSSAC/variant-list-optimizer"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+vlopt = "variant_list_optimizer.cli:cli"

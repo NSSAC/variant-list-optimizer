@@ -1,2 +1,0 @@
-[console_scripts]
-vlopt = variant_list_optimizer.cli:cli

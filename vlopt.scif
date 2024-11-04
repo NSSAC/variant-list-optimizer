@@ -1,0 +1,16 @@
+%appinstall vlopt
+pip install /docker_context
+
+%apphelp vlopt
+Compute optimal variant list.
+
+%apprun vlopt
+CMD="vlopt $@"
+echo "Running $CMD" &&
+$CMD
+
+%apprun vlopt_sciduct
+mkdir -p $SCIF_APPDATA
+NAME="$(jq -r .input.name /job/job.json)"
+AGE="$(jq -r .input.age /job/job.json)"
+scif run vlopt --name $NAME --age $AGE --outdir $SCIF_APPDATA

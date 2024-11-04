@@ -1,0 +1,45 @@
+{ "image_type": "apptainer+scif",
+  "apps": [
+    {
+      "name": "Variant List Optimizer",
+      "app": "vlopt_sciduct",
+      "binds": {
+        "input": "/input",
+        "job": "/job",
+        "output": "/scif/data",
+	"container_cache": "/cache"
+      },
+      "description": "Compute optimal variant list.",
+      "input_files": [
+      ],
+      "input_schema": {
+      },
+      "output_files": {
+        "associateJobMeta": true,
+        "isContainer": true,
+        "type": "folder",
+        "contents": [
+          {
+            "match": "${MATCH}/vlopt_sciduct/*.txt",
+            "type": "txt",
+            "isContainer": false
+          }
+	    ]
+      },
+      "output_schema": {
+      },
+      "resource_requirements": {
+        "cores": 1,
+        "timelimit": 60
+      }
+    }
+  ],
+  "authors": [
+    "Parantapa Bhattacharya <pb+pypi@parantapa.net>",
+    "Brian Klahn <briandk@virginia.edu>",
+    "Bryan Lewis <brylew@virginia.edu>"
+  ],
+  "description": "Variant List Optimizer",
+  "license": "Commercial",
+  "version": "0.1.0"
+}

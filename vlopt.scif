@@ -1,7 +1,6 @@
 %appinstall vlopt
-pushd /docker_context
+cd /docker_context
 cp -r pyproject.toml src .cpush.json5 LICENSE README.md $SCIF_APPLIB
-popd
 pip install $SCIF_APPLIB
 
 %apphelp vlopt

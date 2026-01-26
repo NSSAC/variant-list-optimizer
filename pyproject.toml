@@ -27,7 +27,8 @@ dependencies = [
     "pyarrow",
     "networkx",
     "pango_aliasor @ git+https://github.com/aswarren/pango_aliasor.git",
-    "gurobipy"
+    "gurobipy",
+    "h5py"
 ]
 
 [project.urls]

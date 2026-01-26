@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import pandera as pa
 import pandera.typing as pat
+import h5py as h5
 
 import click
 
@@ -254,3 +255,58 @@ def make_weighted_variant_graph(
     graph_json = nx.node_link_data(G, edges="edges")  # type: ignore
     graph_json = json.dumps(graph_json)
     output_file.write_text(graph_json)
+
+
+@make_graph.command()
+@click.option(
+    "-i",
+    "--input",
+    "input_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to weighted graph file (JSON).",
+)
+@click.option(
+    "-o",
+    "--output",
+    "output_file",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to weighted graph file (HDF5).",
+)
+def make_weighted_variant_graph_h5(
+    input_file: Path,
+    output_file: Path,
+):
+    """Create HDF5 version of the variant graph."""
+
+    with open(input_file, "rt") as fobj:
+        G = json.load(fobj)
+    G = nx.node_link_graph(G, edges="edges")  # type: ignore
+
+    nodes = sorted(G.nodes())
+    node_idx = {node: i for i, node in enumerate(nodes)}
+
+    n = len(nodes)
+
+    parent = np.empty(n, dtype=np.int64)
+    parent.fill(-1)
+    node_weight = np.zeros(n, dtype=np.float64)
+    edge_weight = np.zeros(n, dtype=np.float64)
+
+    for u in nodes:
+        node_weight[node_idx[u]] = G.nodes[u]["importance"]
+
+    for u, v in G.edges():
+        parent[node_idx[v]] = node_idx[u]
+        edge_weight[node_idx[v]] = G.edges[u, v]["distance"]
+
+    root = np.where(parent == -1)
+
+    with h5.File(output_file, "w") as fobj:
+        group = fobj.create_group("0")
+        group.attrs.create("n", n, dtype=np.int64)
+        group.attrs.create("root", root, dtype=np.int64)
+        group.create_dataset("parent", data=parent)
+        group.create_dataset("node_weight", data=node_weight)
+        group.create_dataset("edge_weight", data=edge_weight)

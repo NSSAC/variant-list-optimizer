@@ -415,3 +415,59 @@ def optimize_gurobi(
 
     output = dict(variant_list=list(selected), assignment=assignment, penalty=penalty)
     output_file.write_text(json.dumps(output))
+
+
+@optimize.command()
+@click.option(
+    "-i",
+    "--input",
+    "input_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to weighted graph file (JSON).",
+)
+@click.option(
+    "-l",
+    "--index-list",
+    "index_list_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Path to optimized index list file (JSON).",
+)
+@click.option(
+    "-o",
+    "--output",
+    "output_file",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, path_type=Path),
+    required=True,
+    help="Output file (JSON).",
+)
+def optimize_external(input_file: Path, index_list_file: Path, output_file: Path):
+    """Use external optimizer index list to create the variant list."""
+    G = json.loads(input_file.read_text())
+    G = nx.node_link_graph(G, edges="edges")  # type: ignore
+
+    selected_index = json.loads(index_list_file.read_text())["selected"]
+    nodes = sorted(G.nodes())
+    selected = set()
+    for index in selected_index:
+        selected.add(nodes[index])
+
+    v_nia = make_nia(selected, G, 1.0)
+
+    assignment = []
+    for k, v in v_nia.items():
+        assignment.append(
+            dict(
+                orig_label=k,
+                new_label=v.nia,
+                distance=v.distance,
+                penalty=v.penalty,
+            )
+        )
+
+    penalty = compute_penalty(v_nia)
+    print(f"penalty: {penalty}")
+
+    output = dict(variant_list=list(selected), assignment=assignment, penalty=penalty)
+    output_file.write_text(json.dumps(output))

@@ -15,11 +15,14 @@ DATA_FILE="/home/bl4zc/bi_bl4zc/variant-list-optimizer/data/cov-spectrum_variant
 START_DATE="2021-01-01"
 END_DATE="2024-10-25"
 FIPS_LIST="42,54,51,10,24"
+REGION_NAME="hhs03"
 ##TEMPORAL_IMPORTANCE_DECAY="0.1"
 TEMPORAL_IMPORTANCE_DECAY="0.025"
 ##DISTANCE_PENALTY="10.0"
 DISTANCE_PENALTY="5.0"
 LIST_SIZE=10
+SKIP_BUILD=0
+BUILD_ONLY=0
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -27,32 +30,40 @@ while [[ $# -gt 0 ]]; do
         --start-date) START_DATE="$2"; shift 2 ;;
         --end-date) END_DATE="$2"; shift 2 ;;
         --fips-list) FIPS_LIST="$2"; shift 2 ;;
+        --region-name) REGION_NAME="$2"; shift 2 ;;
         --temporal-decay) TEMPORAL_IMPORTANCE_DECAY="$2"; shift 2 ;;
         --distance-penalty) DISTANCE_PENALTY="$2"; shift 2 ;;
         --list-size) LIST_SIZE="$2"; shift 2 ;;
+        --skip-build) SKIP_BUILD=1; shift 1 ;;
+        --build-only) BUILD_ONLY=1; shift 1 ;;
         *) echo "Unknown option: $1"; exit 1 ;;
     esac
 done
+
+    REGION_SLUG=$(echo "$REGION_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g')
+    FILE_SUFFIX="region-$REGION_SLUG-size-$LIST_SIZE-end-date_$END_DATE.json"
+    LIST_FILE="$WORK_DIR/optimal-list-highs_$FILE_SUFFIX"
+    METADATA_FILE="$WORK_DIR/metadata_$FILE_SUFFIX"
 
 echo "Data file: $DATA_FILE"
 echo "Start date: $START_DATE"
 echo "End date: $END_DATE"
 echo "FIPS list: $FIPS_LIST"
+echo "Region name: $REGION_NAME"
 echo "Temporal importance decay: $TEMPORAL_IMPORTANCE_DECAY"
 echo "Distance penalty: $DISTANCE_PENALTY"
 echo "List size: $LIST_SIZE"
+echo "Skip build: $SKIP_BUILD"
+echo "Build only: $BUILD_ONLY"
 echo "Output list file: $LIST_FILE"
 echo ""
-
-FILE_SUFFIX="size-$LIST_SIZE-end-date_$END_DATE.json"
-LIST_FILE="$WORK_DIR/optimal-list-highs_$FILE_SUFFIX"
-METADATA_FILE="$WORK_DIR/metadata_$FILE_SUFFIX"
 
 
 # Create metadata JSON file with parameters
 cat > "$METADATA_FILE" <<EOF
 {
   "data_file": "$DATA_FILE",
+    "region_name": "$REGION_NAME",
   "fips_list": "$FIPS_LIST",
   "start_date": "$START_DATE",
   "end_date": "$END_DATE",
@@ -73,10 +84,19 @@ eval "$( conda shell.bash hook )"
     set -Eeuo pipefail
     trap 'echo "############ $BASH_COMMAND"' DEBUG
 
-    cmake --build "$BUILD_DIR" --parallel
+    if [[ "$SKIP_BUILD" -eq 1 ]]; then
+        echo "Skipping build step (--skip-build)"
+    else
+        cmake --build "$BUILD_DIR" --parallel
+    fi
 
     conda activate "$PROJECT"
     PATH="$BUILD_DIR:$PATH"
+
+if [[ "$BUILD_ONLY" -eq 1 ]]; then
+    echo "Build-only mode complete. Exiting before optimization pipeline."
+    exit 0
+fi
 
 # Intermediate files
 VALIDATED_DATA_FILE="$WORK_DIR/obs-count.parquet"

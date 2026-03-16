@@ -5,6 +5,8 @@ project(
   VERSION 0.0.1
   LANGUAGES CXX)
 
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".so")
+
 find_package(OpenMP REQUIRED)
 
 find_package(fmt REQUIRED)
@@ -15,11 +17,11 @@ find_package(random123 REQUIRED)
 find_package(HDF5 REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
-find_package(gurobi REQUIRED)
+# find_package(gurobi REQUIRED)
 find_package(highs REQUIRED)
 find_package(ortools REQUIRED)
 
-add_library(_tprs src/taxonomic_tree.cpp)
+add_library(_tprs STATIC src/taxonomic_tree.cpp)
 target_sources(_tprs
 PUBLIC
     FILE_SET HEADERS
@@ -27,7 +29,6 @@ PUBLIC
 )
 target_link_libraries(_tprs
 PUBLIC
-    OpenMP::OpenMP_CXX
     fmt::fmt
     argparse::argparse
     phmap
@@ -45,15 +46,19 @@ PUBLIC
 add_executable(compute-optimal-tlist
     src/compute_optimal_tlist.cpp
     src/optimize_greedy.cpp
-    src/optimize_gurobi.cpp
+    # src/optimize_gurobi.cpp
     src/optimize_highs.cpp
     src/optimize_cpsat.cpp
     src/optimize_approx.cpp
     src/highs_helper.cpp
 )
 target_link_libraries(compute-optimal-tlist
-PRIVATE 
-    gurobi::gurobi
+PRIVATE
+    -static -static-libgcc -static-libstdc++
+
+    OpenMP::OpenMP_CXX
+    # gurobi::gurobi
     highs::highs
     ortools::ortools
-    _tprs)
+    _tprs
+)

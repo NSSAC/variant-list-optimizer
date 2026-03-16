@@ -15,7 +15,7 @@ using json = nlohmann::json;
 OptimizeOutput optimize_greedy(const Tree& tree, const Graph& agraph, const std::int64_t lsize);
 OptimizeOutput optimize_approx(const Tree& tree, const Graph& agraph, const double cost_perc);
 
-OptimizeOutput optimize_gurobi(const Tree& tree, const Graph& agraph, const std::int64_t lsize, const double timelimit);
+// OptimizeOutput optimize_gurobi(const Tree& tree, const Graph& agraph, const std::int64_t lsize, const double timelimit);
 OptimizeOutput optimize_highs(const Tree& tree, const Graph& agraph, const std::int64_t lsize, const double timelimit);
 OptimizeOutput optimize_cpsat(const Tree& tree, const Graph& agraph, const std::int64_t lsize, const double timelimit);
 
@@ -114,8 +114,8 @@ int main(int argc, char* argv[]) {
     OptimizeOutput result;
     if (method == "greedy") {
         result = optimize_greedy(tree, agraph, lsize);
-    } else if (method == "gurobi") {
-        result = optimize_gurobi(tree, agraph, lsize, timelimit);
+    // } else if (method == "gurobi") {
+    //     result = optimize_gurobi(tree, agraph, lsize, timelimit);
     } else if (method == "highs") {
         result = optimize_highs(tree, agraph, lsize, timelimit);
     } else if (method == "cpsat") {

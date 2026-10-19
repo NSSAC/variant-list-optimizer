@@ -1,0 +1,374 @@
+COMMIT_DATE:2026-10-02 f935bb528fb5994b3500340c4f151f6fd2cc9bde
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index 69ef5c87..2bf37c39 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -60,3 +60,4 @@
+ 26B: 26B (XFG.3.4.1)
+ 26C: 26C (PQ.16.1.1)
+ 26D: 26D (RF.5)
++26E: 26E (RK.1)
+COMMIT_DATE:2026-10-02 25972baec2c8c57dace7552409a538fb8e185662
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index 76dd8a6e..69ef5c87 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -58,4 +58,5 @@
+ 25I: 25I (BA.3.2)
+ 26A: 26A (XFG.1.1)
+ 26B: 26B (XFG.3.4.1)
+-26C: 26C (PQ.16.1.1)
+\ No newline at end of file
++26C: 26C (PQ.16.1.1)
++26D: 26D (RF.5)
+COMMIT_DATE:2026-09-24 eddce4fd0ba806b4c168d6ca697a4519e1a1735a
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index 442e7eae..76dd8a6e 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -57,4 +57,5 @@
+ 25H: 25H (XFJ)
+ 25I: 25I (BA.3.2)
+ 26A: 26A (XFG.1.1)
+-26B: 26B (XFG.3.4.1)
+\ No newline at end of file
++26B: 26B (XFG.3.4.1)
++26C: 26C (PQ.16.1.1)
+\ No newline at end of file
+COMMIT_DATE:2026-07-06 bc2d1cdb76640bba32b80cf9f634976c40c4be8f
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index 74189d6e..442e7eae 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -56,4 +56,5 @@
+ 25G: 25G (XFC)
+ 25H: 25H (XFJ)
+ 25I: 25I (BA.3.2)
+-26A: 26A (XFG.1.1)
+\ No newline at end of file
++26A: 26A (XFG.1.1)
++26B: 26B (XFG.3.4.1)
+\ No newline at end of file
+COMMIT_DATE:2026-06-23 0749518e25aee79ebabb348b5954733765d2aff8
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index 4079d277..74189d6e 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -55,4 +55,5 @@
+ 25F: 25F (NW.1.2)
+ 25G: 25G (XFC)
+ 25H: 25H (XFJ)
+-25I: 25I (BA.3.2)
+\ No newline at end of file
++25I: 25I (BA.3.2)
++26A: 26A (XFG.1.1)
+\ No newline at end of file
+COMMIT_DATE:2025-12-23 8491d656944a88aef9c35c35398c56950cea51dd
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index 34fa46fa..4079d277 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -50,3 +50,9 @@
+ 25A: 25A (LP.8.1)
+ 25B: 25B (NB.1.8.1)
+ 25C: 25C (XFG)
++25D: 25D (MC.10.2.1)
++25E: 25E (PY.1)
++25F: 25F (NW.1.2)
++25G: 25G (XFC)
++25H: 25H (XFJ)
++25I: 25I (BA.3.2)
+\ No newline at end of file
+COMMIT_DATE:2025-06-06 41cf6470d3140963ff3e02c29241f80ae8ed9c33
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index 32e8dc22..34fa46fa 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -49,3 +49,4 @@
+ 24I: 24I (MV.1)
+ 25A: 25A (LP.8.1)
+ 25B: 25B (NB.1.8.1)
++25C: 25C (XFG)
+COMMIT_DATE:2025-04-23 5555ece97bafe1aa2cb19dcaac183d5a718d29fa
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index d43ec764..32e8dc22 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -48,3 +48,4 @@
+ 24H: 24H (LF.7)
+ 24I: 24I (MV.1)
+ 25A: 25A (LP.8.1)
++25B: 25B (NB.1.8.1)
+COMMIT_DATE:2025-01-23 c6a88b6438f326230413d2e8fcb9aaeabcd0626a
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index ee35e943..d43ec764 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -47,4 +47,4 @@
+ 24G: 24G (KP.2.3)
+ 24H: 24H (LF.7)
+ 24I: 24I (MV.1)
+-24J: 24J (LP.8.1)
++25A: 25A (LP.8.1)
+COMMIT_DATE:2024-12-20 ca0478e252a560f4fc59974a3a4bc0dd6bc37e21
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index ac05d0e2..ee35e943 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -47,3 +47,4 @@
+ 24G: 24G (KP.2.3)
+ 24H: 24H (LF.7)
+ 24I: 24I (MV.1)
++24J: 24J (LP.8.1)
+COMMIT_DATE:2024-11-14 55bfc26e22ea68196f0f1afd4eb8b5cc9a3057f9
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index fbfa1ae7..ac05d0e2 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -45,3 +45,5 @@
+ 24E: 24E (KP.3.1.1)
+ 24F: 24F (XEC)
+ 24G: 24G (KP.2.3)
++24H: 24H (LF.7)
++24I: 24I (MV.1)
+COMMIT_DATE:2024-10-04 6434f5da97982e34ce9f2df9890a891eddaa30c7
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index 8806974a..fbfa1ae7 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -43,3 +43,5 @@
+ 24C: 24C (KP.3)
+ 24D: 24D (XDV.1)
+ 24E: 24E (KP.3.1.1)
++24F: 24F (XEC)
++24G: 24G (KP.2.3)
+COMMIT_DATE:2024-09-20 41e2e8f290dc895483576a1e53d4f44f06d8afee
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index f550d343..8806974a 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -41,3 +41,5 @@
+ 24A: 24A (JN.1)
+ 24B: 24B (JN.1.11.1)
+ 24C: 24C (KP.3)
++24D: 24D (XDV.1)
++24E: 24E (KP.3.1.1)
+COMMIT_DATE:2024-07-11 3eb09e6bbb5daaf420e307761aa7c39a599c79cc
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index 4aff0a9b..f550d343 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -40,3 +40,4 @@
+ 23I: 23I (BA.2.86)
+ 24A: 24A (JN.1)
+ 24B: 24B (JN.1.11.1)
++24C: 24C (KP.3)
+COMMIT_DATE:2024-04-05 1f7265a7f4e51147a38f738e3f2bcb77b9d35287
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index b99b7223..4aff0a9b 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -38,3 +38,5 @@
+ 23G: 23G (XBB.1.5.70)
+ 23H: 23H (HK.3)
+ 23I: 23I (BA.2.86)
++24A: 24A (JN.1)
++24B: 24B (JN.1.11.1)
+COMMIT_DATE:2023-11-29 b2bda2d8967e8716cf4caf6e2737779050c76b58
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index 54cccf7f..b99b7223 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -35,3 +35,6 @@
+ 23D: 23D (XBB.1.9)
+ 23E: 23E (XBB.2.3)
+ 23F: 23F (EG.5.1)
++23G: 23G (XBB.1.5.70)
++23H: 23H (HK.3)
++23I: 23I (BA.2.86)
+COMMIT_DATE:2023-08-07 f745a10a2e8ba041352eeac9aced6ae5a5357ee9
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index dc135534..54cccf7f 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -31,8 +31,7 @@
+ 22F: 22F (XBB)
+ 23A: 23A (XBB.1.5)
+ 23B: 23B (XBB.1.16)
+-23C: 23C (XBC)
+-23D: 23D (CH.1.1)
+-23E: 23E (XBB.1.9)
+-23F: 23F (XBB.2.3)
+-23G: 23G (EG.5)
++23C: 23C (CH.1.1)
++23D: 23D (XBB.1.9)
++23E: 23E (XBB.2.3)
++23F: 23F (EG.5.1)
+COMMIT_DATE:2023-07-31 69345ba9ae30aa279cc1e65167f6e8fbcd391cf8
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index c9ccc649..dc135534 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -31,3 +31,8 @@
+ 22F: 22F (XBB)
+ 23A: 23A (XBB.1.5)
+ 23B: 23B (XBB.1.16)
++23C: 23C (XBC)
++23D: 23D (CH.1.1)
++23E: 23E (XBB.1.9)
++23F: 23F (XBB.2.3)
++23G: 23G (EG.5)
+COMMIT_DATE:2023-04-28 2f6271c3f8b808ba038012ca92b6340cef803089
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index 0b961455..c9ccc649 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -1,3 +1,4 @@
++19A: 19A
+ 19B: 19B
+ 20A: 20A
+ 20B: 20B
+COMMIT_DATE:2023-04-22 b4d024b7fa0ccc32a66cefa8120146e06b53d6ac
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index f488e60f..0b961455 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -1,32 +1,32 @@
+- - 19B: 19B
+- - 20A: 20A
+- - 20B: 20B
+- - 20C: 20C
+- - 20D: 20D
+- - 20E: 20E
+- - 20F: 20F
+- - 20G: 20G
+- - 20I: 20I (Alpha)
+- - 20H: 20H (Beta)
+- - 20J: 20J (Gamma)
+- - 21A: 21A (Delta)
+- - 21B: 21B (Kappa)
+- - 21C: 21C (Epsilon)
+- - 21D: 21D (Eta)
+- - 21E: 21E (Theta)
+- - 21F: 21F (Iota)
+- - 21G: 21G (Lambda)
+- - 21I: 21I (Delta)
+- - 21H: 21H (Mu)
+- - 21J: 21J (Delta)
+- - 21K: 21K (BA.1)
+- - 21L: 21L (BA.2)
+- - 21M: 21M (Omicron)
+- - 22A: 22A (BA.4)
+- - 22B: 22B (BA.5)
+- - 22C: 22C (BA.2.12.1)
+- - 22D: 22D (BA.2.75)
+- - 22E: 22E (BQ.1)
+- - 22F: 22F (XBB)
+- - 23A: 23A (XBB.1.5)
+- - 23B: 23B (XBB.1.16)
++19B: 19B
++20A: 20A
++20B: 20B
++20C: 20C
++20D: 20D
++20E: 20E
++20F: 20F
++20G: 20G
++20I: 20I (Alpha)
++20H: 20H (Beta)
++20J: 20J (Gamma)
++21A: 21A (Delta)
++21B: 21B (Kappa)
++21C: 21C (Epsilon)
++21D: 21D (Eta)
++21E: 21E (Theta)
++21F: 21F (Iota)
++21G: 21G (Lambda)
++21I: 21I (Delta)
++21H: 21H (Mu)
++21J: 21J (Delta)
++21K: 21K (BA.1)
++21L: 21L (BA.2)
++21M: 21M (Omicron)
++22A: 22A (BA.4)
++22B: 22B (BA.5)
++22C: 22C (BA.2.12.1)
++22D: 22D (BA.2.75)
++22E: 22E (BQ.1)
++22F: 22F (XBB)
++23A: 23A (XBB.1.5)
++23B: 23B (XBB.1.16)
+COMMIT_DATE:2023-04-22 9f83bec97c71453c47893ccdae2ad0b768e7c770
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+index b98ea7f6..f488e60f 100644
+--- a/defaults/clade_display_names.yml
++++ b/defaults/clade_display_names.yml
+@@ -29,4 +29,4 @@
+  - 22E: 22E (BQ.1)
+  - 22F: 22F (XBB)
+  - 23A: 23A (XBB.1.5)
+- - 23B: 23B  (XBB.1.16)
+\ No newline at end of file
++ - 23B: 23B (XBB.1.16)
+COMMIT_DATE:2023-04-20 31a4e3dc9a14944136cc1f891ef7ba9d1b4db108
+
+diff --git a/defaults/clade_display_names.yml b/defaults/clade_display_names.yml
+new file mode 100644
+index 00000000..b98ea7f6
+--- /dev/null
++++ b/defaults/clade_display_names.yml
+@@ -0,0 +1,32 @@
++ - 19B: 19B
++ - 20A: 20A
++ - 20B: 20B
++ - 20C: 20C
++ - 20D: 20D
++ - 20E: 20E
++ - 20F: 20F
++ - 20G: 20G
++ - 20I: 20I (Alpha)
++ - 20H: 20H (Beta)
++ - 20J: 20J (Gamma)
++ - 21A: 21A (Delta)
++ - 21B: 21B (Kappa)
++ - 21C: 21C (Epsilon)
++ - 21D: 21D (Eta)
++ - 21E: 21E (Theta)
++ - 21F: 21F (Iota)
++ - 21G: 21G (Lambda)
++ - 21I: 21I (Delta)
++ - 21H: 21H (Mu)
++ - 21J: 21J (Delta)
++ - 21K: 21K (BA.1)
++ - 21L: 21L (BA.2)
++ - 21M: 21M (Omicron)
++ - 22A: 22A (BA.4)
++ - 22B: 22B (BA.5)
++ - 22C: 22C (BA.2.12.1)
++ - 22D: 22D (BA.2.75)
++ - 22E: 22E (BQ.1)
++ - 22F: 22F (XBB)
++ - 23A: 23A (XBB.1.5)
++ - 23B: 23B  (XBB.1.16)
+\ No newline at end of file

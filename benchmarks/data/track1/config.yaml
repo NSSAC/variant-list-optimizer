@@ -1,0 +1,25 @@
+# -------------------------------------------
+# Configuration for processing data
+# -------------------------------------------
+
+# When processing data, drop antibodies with more than this many sites
+# of escape that is with more than `max_sig_sites` sites with escape
+# of at least `sig_escape_threshold`.
+filter_antibodies:
+  sig_escape_threshold: 0.1
+  max_sig_sites: 40
+
+# To limit plot size, drop escape values less than this after normalizing to one
+drop_escape_below: 0.02
+
+# When processing data, only keep viruses with IC50s measured against at
+# least this many antibodies
+virus_min_antibodies_w_ic50: 1000
+
+# When processing data, we provide antibody re-weightings for some
+# groupings. These are designed to account for the instance when
+# the antibodies isolated are not representative of their actual frequencies.
+antibody_reweighting:
+  repeated_2024:
+    # these are the re-weightings used in https://doi.org/10.1101/2023.05.01.53
+

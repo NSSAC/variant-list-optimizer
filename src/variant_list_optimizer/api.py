@@ -166,10 +166,12 @@ def select_variant_list(
     if df.empty:
         return VariantSelectionResult(variants=[], metadata={"reason": "empty_input_data"})
 
+    max_obs_ts = df["date"].max()
     if end_date is not None:
-        end_ts = pd.to_datetime(end_date)
+        requested_end_ts = pd.to_datetime(end_date)
+        end_ts = min(requested_end_ts, max_obs_ts)
     else:
-        end_ts = df["date"].max()
+        end_ts = max_obs_ts
 
     # Make end_date inclusive of observations on end_date itself
     exclusive_end_ts = end_ts + pd.Timedelta(days=1)

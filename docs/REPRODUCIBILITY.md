@@ -1,6 +1,6 @@
 # Reproducibility Guide: Contour-Regularized Variant List Optimization
 
-This companion document provides complete programmatic instructions, data provenance, command-line examples, and a table-by-table mapping to replicate all results reported in the Oxford *Bioinformatics* manuscript ([`docs/oup-authoring-template.tex`](oup-authoring-template.tex)).
+This companion document provides complete programmatic instructions, data provenance, command-line examples, and a table-by-table mapping to replicate all results reported in the Oxford *Bioinformatics* manuscript ([`docs/main.tex`](main.tex)).
 
 ---
 
@@ -16,7 +16,7 @@ variant-list-optimizer/
 │   └── optimize.py         # Corrected multi-hop NIA traversal, open-source HiGHS MILP solver
 │                           # (optimize-highs), and dynamic --slot-cost / --max-size sizing
 ├── docs/
-│   ├── oup-authoring-template.tex       # Overleaf-ready Oxford Bioinformatics LaTeX manuscript
+│   ├── main.tex       # Overleaf-ready Oxford Bioinformatics LaTeX manuscript
 │   ├── contour_optimization_concept.png # Figure 1 conceptual workflow diagram
 │   ├── REPRODUCIBILITY.md               # This companion reproducibility guide
 │   └── LongitudinalVariantBenchmarkingDatasets.pdf # Benchmark dataset specification report
@@ -154,9 +154,9 @@ All reference datasets staged by [`benchmarks/stage_benchmark_data.py`](../bench
 
 ---
 
-## 6. Mapping from Manuscript Tables (`oup-authoring-template.tex`) to Scripts & Output CSVs
+## 6. Mapping from Manuscript Tables (`main.tex`) to Scripts & Output CSVs
 
-Every quantitative table and statistical test in [`docs/oup-authoring-template.tex`](oup-authoring-template.tex) is directly reproduced by the scripts and CSV outputs listed below:
+Every quantitative table and statistical test in [`docs/main.tex`](main.tex) is directly reproduced by the scripts and CSV outputs listed below:
 
 | Manuscript Element | Generating Script | Output CSV File in `benchmarks/` | Key Columns / Metrics |
 | :--- | :--- | :--- | :--- |
@@ -170,8 +170,8 @@ Every quantitative table and statistical test in [`docs/oup-authoring-template.t
 
 ## 7. Compiling the Manuscript in Overleaf
 
-To compile [`docs/oup-authoring-template.tex`](oup-authoring-template.tex) in Overleaf:
+To compile [`docs/main.tex`](main.tex) in Overleaf:
 1. Upload the Oxford University Press authoring template bundle files (`oup-authoring-template.cls` and supporting style/font files) into your Overleaf project root.
-2. Replace `oup-authoring-template.tex` in Overleaf with [`docs/oup-authoring-template.tex`](oup-authoring-template.tex).
+2. Replace `main.tex` in Overleaf with [`docs/main.tex`](main.tex).
 3. Upload [`docs/contour_optimization_concept.png`](contour_optimization_concept.png) to the Overleaf project root (or into the `Fig/` folder; `\graphicspath{{./}{Fig/}}` is pre-configured to search both).
 4. Compile using **pdfLaTeX** (or **XeLaTeX**).
